@@ -1,0 +1,68 @@
+Customer Segmentation using K-Means & PCA
+Unsupervised Learning Project
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+
+df = pd.read_csv(r"E:\Tronixia Projects\ML\CUSTOMER SEGMENTATION\Mall_Customers.csv")
+df.head()
+
+df.info()
+df.describe()
+
+sns.countplot(x="Gender", data=df)
+plt.show()
+
+plt.scatter(df["Annual Income (k$)"], df["Spending Score (1-100)"])
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.title("Income vs Spending")
+plt.show()
+
+df["Gender"] = df["Gender"].map({"Male": 0, "Female": 1})
+
+X = df[["Age", "Annual Income (k$)", "Spending Score (1-100)"]]
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+import warnings
+warnings.filterwarnings("ignore")
+wcss = []
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i, random_state=42)
+    kmeans.fit(X_scaled)
+    wcss.append(kmeans.inertia_)
+plt.plot(range(1,11), wcss, marker='o')
+plt.xlabel("Number of Clusters")
+plt.ylabel("WCSS")
+plt.title("Elbow Method")
+plt.show()
+
+kmeans = KMeans(n_clusters=5, random_state=42)
+clusters = kmeans.fit_predict(X_scaled)
+df["Cluster"] = clusters
+
+plt.scatter(
+    df["Annual Income (k$)"],
+    df["Spending Score (1-100)"],
+    c=df["Cluster"]
+)
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.title("Customer Segments")
+plt.show()
+
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+plt.scatter(X_pca[:,0], X_pca[:,1], c=df["Cluster"])
+plt.title("PCA Visualization of Clusters")
+plt.show()
+
+df.groupby("Cluster").mean()
